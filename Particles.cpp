@@ -181,6 +181,17 @@ private:
 	std::vector<VkFence> computeInFlightFences;
 	uint32_t currentFrame = 0;
 
+	// Camera control variables
+	glm::vec3 cameraPos = glm::vec3(2.0f, 2.0f, 2.0f);
+	glm::vec3 cameraFront = glm::vec3(-0.5f, -0.5f, -0.5f);
+	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	float cameraSpeed = 0.005f;
+	float yaw = -135.0f;   // Initial yaw (left/right)
+	float pitch = -30.0f;  // Initial pitch (up/down)
+	float lastX = WIDTH / 2.0f;
+	float lastY = HEIGHT / 2.0f;
+	bool firstMouse = true;
+
 	float lastFrameTime = 0.0f;
 
 	bool framebufferResized = false;
@@ -189,14 +200,21 @@ private:
 
 	void initWindow() {
 		glfwInit();
-
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
 		window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+
 		glfwSetWindowUserPointer(window, this);
 		glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 
 		lastTime = glfwGetTime();
+
+		// Input callbacks:
+		glfwSetCursorPosCallback(window, mouseCallback);
+		glfwSetScrollCallback(window, scrollCallback);
+		glfwSetKeyCallback(window, keyCallback);
+
+		// Hide and capture mouse cursor
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
@@ -232,7 +250,19 @@ private:
 	void mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
+			
+			// Process continuous key presses
+			if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+				cameraPos += cameraSpeed * cameraFront;
+			if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+				cameraPos -= cameraSpeed * cameraFront;
+			if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+				cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+			if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+				cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+			
 			drawFrame();
+
 			// We want to animate the particle system using the last frames time to get smooth, frame-rate independent animation
 			double currentTime = glfwGetTime();
 			lastFrameTime = (currentTime - lastTime) * 1000.0;
@@ -259,6 +289,9 @@ private:
 	}
 
 	void cleanup() {
+
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
 		cleanupSwapChain();
 
 		vkDestroyImageView(device, depthImageView, nullptr);
@@ -1465,16 +1498,23 @@ private:
 		UniformBufferObject ubo{};
 		ubo.deltaTime = lastFrameTime * 2.0f;
 
-		// No model transformation
+		// Identity matrix for model (no transformation)
 		ubo.model = glm::mat4(1.0f);
 
-		// Camera orbiting at 45 degree angle
-		float camHeight = 1.5f;
-		float camDistance = 3.0f;
+		//// Camera orbiting at 45 degree angle
+		//float camHeight = 1.5f;
+		//float camDistance = 3.0f;
+		//ubo.view = glm::lookAt(
+		//	glm::vec3(camDistance * sin(time * 0.2f), camHeight, camDistance * cos(time * 0.2f)),
+		//	glm::vec3(0.0f, 0.0f, 0.0f),  // Look at center
+		//	glm::vec3(0.0f, 1.0f, 0.0f)   // Up vector
+		//);
+
+		// Use camera controls for view matrix
 		ubo.view = glm::lookAt(
-			glm::vec3(camDistance * sin(time * 0.2f), camHeight, camDistance * cos(time * 0.2f)),
-			glm::vec3(0.0f, 0.0f, 0.0f),  // Look at center
-			glm::vec3(0.0f, 1.0f, 0.0f)   // Up vector
+			cameraPos,              // Camera position
+			cameraPos + cameraFront, // Look at point
+			cameraUp                // Up vector
 		);
 
 		// Perspective projection
@@ -1750,6 +1790,71 @@ private:
 		}
 
 		return true;
+	}
+
+	static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+		auto app = reinterpret_cast<ComputeShaderApplication*>(glfwGetWindowUserPointer(window));
+		app->processMouseInput(xpos, ypos);
+	}
+
+	static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+		auto app = reinterpret_cast<ComputeShaderApplication*>(glfwGetWindowUserPointer(window));
+		app->cameraSpeed = glm::clamp(app->cameraSpeed + (float)yoffset * 0.01f, 0.01f, 1.0f);
+	}
+
+	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+		auto app = reinterpret_cast<ComputeShaderApplication*>(glfwGetWindowUserPointer(window));
+		app->processKeyInput(key, action);
+	}
+
+	void processMouseInput(double xpos, double ypos) {
+		if (firstMouse) {
+			lastX = xpos;
+			lastY = ypos;
+			firstMouse = false;
+		}
+
+		float xoffset = xpos - lastX;
+		float yoffset = lastY - ypos; // Reversed since y-coordinates go from bottom to top
+		lastX = xpos;
+		lastY = ypos;
+
+		float sensitivity = 0.1f;
+		xoffset *= sensitivity;
+		yoffset *= sensitivity;
+
+		yaw += xoffset;
+		pitch += yoffset;
+
+		// Constrain pitch to prevent screen flipping
+		pitch = glm::clamp(pitch, -89.0f, 89.0f);
+
+		// Update camera front vector
+		glm::vec3 front;
+		front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		front.y = sin(glm::radians(pitch));
+		front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+		cameraFront = glm::normalize(front);
+	}
+
+	void processKeyInput(int key, int action) {
+		if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+			float velocity = cameraSpeed;
+			if (key == GLFW_KEY_W)
+				cameraPos += velocity * cameraFront;
+			if (key == GLFW_KEY_S)
+				cameraPos -= velocity * cameraFront;
+			if (key == GLFW_KEY_A)
+				cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
+			if (key == GLFW_KEY_D)
+				cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
+			if (key == GLFW_KEY_SPACE)
+				cameraPos += velocity * cameraUp;
+			if (key == GLFW_KEY_LEFT_SHIFT)
+				cameraPos -= velocity * cameraUp;
+			if (key == GLFW_KEY_ESCAPE)
+				glfwSetWindowShouldClose(window, true);
+		}
 	}
 
 	static std::vector<char> readFile(const std::string& filename) {
