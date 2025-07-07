@@ -1,40 +1,54 @@
 #version 450
 
-struct Particle {
-	vec2 position;
-	vec2 velocity;
-    vec4 color;
-};
-
-layout (binding = 0) uniform ParameterUBO {
+layout(std140, binding = 0) uniform UniformBufferObject {
+    mat4 model;
+    mat4 view;
+    mat4 proj;
     float deltaTime;
 } ubo;
 
+struct Particle {
+    vec3 position;
+    vec3 velocity;
+    vec4 color;
+};
+
 layout(std140, binding = 1) readonly buffer ParticleSSBOIn {
-   Particle particlesIn[ ];
+    Particle particlesIn[];
 };
 
 layout(std140, binding = 2) buffer ParticleSSBOOut {
-   Particle particlesOut[ ];
+    Particle particlesOut[];
 };
 
-layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
-void main() 
-{
-    uint index = gl_GlobalInvocationID.x;  
-
-    Particle particleIn = particlesIn[index];
-
-    particlesOut[index].position = particleIn.position + particleIn.velocity.xy * ubo.deltaTime;
-    particlesOut[index].velocity = particleIn.velocity;
-
-    // Flip movement at window border
-    if ((particlesOut[index].position.x <= -1.0) || (particlesOut[index].position.x >= 1.0)) {
-        particlesOut[index].velocity.x = -particlesOut[index].velocity.x;
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    
+    // Read input
+    Particle particle = particlesIn[index];
+    
+    // Apply velocity in all 3 dimensions
+    particle.position += particle.velocity * ubo.deltaTime;
+    
+    // Boundary handling with damping for all axes
+    float boundary = 0.95;
+    float damping = 0.95;
+    
+    if (abs(particle.position.x) > boundary) {
+        particle.position.x = boundary * sign(particle.position.x);
+        particle.velocity.x *= -damping;
     }
-    if ((particlesOut[index].position.y <= -1.0) || (particlesOut[index].position.y >= 1.0)) {
-        particlesOut[index].velocity.y = -particlesOut[index].velocity.y;
+    if (abs(particle.position.y) > boundary) {
+        particle.position.y = boundary * sign(particle.position.y);
+        particle.velocity.y *= -damping;
     }
-
+    if (abs(particle.position.z) > boundary) {
+        particle.position.z = boundary * sign(particle.position.z);
+        particle.velocity.z *= -damping;
+    }
+    
+    // Write back
+    particlesOut[index] = particle;
 }
