@@ -81,10 +81,9 @@ struct UniformBufferObject {
 };
 
 struct Particle {
-	glm::vec3 position;  // 12 bytes
-	glm::vec3 velocity;  // 12 bytes
-	glm::vec4 color;     // 16 bytes
-	// Total: 40 bytes (good for std140 alignment)
+	glm::vec4 position;
+	glm::vec4 velocity;
+	glm::vec4 color;
 
 	static VkVertexInputBindingDescription getBindingDescription() {
 		VkVertexInputBindingDescription bindingDescription{};
@@ -100,7 +99,7 @@ struct Particle {
 		// Position (location = 0)
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT; // vec3
+		attributeDescriptions[0].format = VK_FORMAT_R32G32B32A32_SFLOAT; // vec4
 		attributeDescriptions[0].offset = offsetof(Particle, position);
 
 		// Color (location = 1)
@@ -250,7 +249,7 @@ private:
 	void mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
-			
+
 			// Process continuous key presses
 			if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 				cameraPos += cameraSpeed * cameraFront;
@@ -260,7 +259,7 @@ private:
 				cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 			if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 				cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-			
+
 			drawFrame();
 
 			// We want to animate the particle system using the last frames time to get smooth, frame-rate independent animation
@@ -578,6 +577,7 @@ private:
 	}
 
 	void createRenderPass() {
+		// Color attachment
 		VkAttachmentDescription colorAttachment{};
 		colorAttachment.format = swapChainImageFormat;
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -599,14 +599,20 @@ private:
 		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
+		//References
 		VkAttachmentReference colorAttachmentRef{};
 		colorAttachmentRef.attachment = 0;
 		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference depthAttachmentRef{};
+		depthAttachmentRef.attachment = 1; // depth is second in attachments list
+		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkSubpassDescription subpass{};
 		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass.colorAttachmentCount = 1;
 		subpass.pColorAttachments = &colorAttachmentRef;
+		subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
 		VkSubpassDependency dependency{};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -616,10 +622,15 @@ private:
 		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+		std::array<VkAttachmentDescription, 2> attachments = {
+			colorAttachment,
+			depthAttachment
+		};
+
 		VkRenderPassCreateInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = 1;
-		renderPassInfo.pAttachments = &colorAttachment;
+		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());;
+		renderPassInfo.pAttachments = attachments.data();
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
 		renderPassInfo.dependencyCount = 1;
@@ -1072,27 +1083,59 @@ private:
 		std::uniform_real_distribution<float> posDist(-0.8f, 0.8f);
 		std::uniform_real_distribution<float> velDist(-0.001f, 0.001f);
 		std::uniform_real_distribution<float> colDist(0.1f, 1.0f);
+		std::uniform_real_distribution<float> rndDist(-1.0f, 1.0f);
 
 		std::vector<Particle> particles(PARTICLE_COUNT);
 		for (auto& particle : particles) {
-			// Random position in 3D space
-			particle.position = glm::vec3(
-				posDist(rndEngine),
-				posDist(rndEngine),
-				posDist(rndEngine)
+
+			// Create particles in a sphere
+			float theta = rndDist(rndEngine) * 2.0f * 3.14159265358979323846f;
+			float phi = acos(1.0f - 2.0f * rndDist(rndEngine));
+			float r = 0.25f * pow(rndDist(rndEngine), 1.0f / 3.0f);
+
+			particle.position = glm::vec4(
+				r * sin(phi) * cos(theta),
+				r * sin(phi) * sin(theta),
+				r * cos(phi),
+				1.0f
 			);
 
-			// Random velocity in all 3 dimensions
-			particle.velocity = glm::vec3(
-				velDist(rndEngine),
-				velDist(rndEngine),
-				velDist(rndEngine)  // Ensure Z velocity isn't zero
-			);
+			//// Random position in 3D space
+			//particle.position = glm::vec4(
+			//	posDist(rndEngine),
+			//	posDist(rndEngine),
+			//	posDist(rndEngine),
+			//	1.0f
+			//);
 
-			// Make sure some particles have stronger Z movement
-			if (rand() % 5 == 0) {  // 20% of particles
-				particle.velocity.z *= 3.0f;
-			}
+			// Random velocity direction
+			particle.velocity = glm::normalize(glm::vec4(
+				rndDist(rndEngine) - 0.5f,
+				rndDist(rndEngine) - 0.5f,
+				rndDist(rndEngine) - 0.5f,
+				1.0f
+			)) * 0.00025f;
+
+			//// Random velocity in all 3 dimensions
+			//particle.velocity = glm::vec4(
+			//	velDist(rndEngine),
+			//	velDist(rndEngine),
+			//	velDist(rndEngine),
+			//	1.0f
+			//);
+
+			//// debug velocities
+			//particle.velocity = glm::vec4(
+			//	0.001f,
+			//	0.001f,
+			//	0.001f,
+			//	0.0000f
+			//);
+
+			//// Make sure some particles have stronger Z movement
+			//if (rand() % 5 == 0) {  // 20% of particles
+			//	particle.velocity.z *= 3.0f;
+			//}
 
 			particle.color = glm::vec4(
 				colDist(rndEngine),
@@ -1100,6 +1143,14 @@ private:
 				colDist(rndEngine),
 				1.0f
 			);
+
+
+			//particle.color = glm::vec4(
+			//	1,
+			//	1,
+			//	1,
+			//	1
+			//);
 		}
 
 		VkDeviceSize bufferSize = sizeof(Particle) * PARTICLE_COUNT;

@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Particles.cpp" />
+    <ClCompile Include="DepthBuffering.cpp" />
     <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="Vulkan_Start_1.cpp" />
   </ItemGroup>

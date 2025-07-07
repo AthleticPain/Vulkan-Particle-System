@@ -8,8 +8,8 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 } ubo;
 
 struct Particle {
-    vec3 position;
-    vec3 velocity;
+    vec4 position;
+    vec4 velocity;
     vec4 color;
 };
 
