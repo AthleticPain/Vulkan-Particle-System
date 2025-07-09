@@ -23,7 +23,7 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-const uint32_t PARTICLE_COUNT = 8192 * 2;
+const uint32_t PARTICLE_COUNT = 8192 * 32;
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -1850,7 +1850,7 @@ private:
 
 	static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 		auto app = reinterpret_cast<ComputeShaderApplication*>(glfwGetWindowUserPointer(window));
-		app->cameraSpeed = glm::clamp(app->cameraSpeed + (float)yoffset * 0.01f, 0.01f, 1.0f);
+		app->cameraSpeed = glm::clamp(app->cameraSpeed + (float)yoffset * 0.01f, 0.001f, 0.1f);
 	}
 
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -1866,7 +1866,7 @@ private:
 		}
 
 		float xoffset = xpos - lastX;
-		float yoffset = lastY - ypos; // Reversed since y-coordinates go from bottom to top
+		float yoffset = lastY - ypos; // Reversed
 		lastX = xpos;
 		lastY = ypos;
 
