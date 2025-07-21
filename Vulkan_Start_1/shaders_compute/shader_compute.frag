@@ -1,6 +1,6 @@
 #version 450
 
-layout(location = 0) in vec3 fragColor;
+layout(location = 0) in vec4 fragColor;
 layout(location = 1) in float fragDepth;  // Add this
 
 layout(location = 0) out vec4 outColor;
@@ -12,7 +12,7 @@ void main() {
 
     //float z = fragDepth;
 
-    outColor = vec4(fragColor, 1.0);
+    outColor = fragColor;
     
     // Circular points
     vec2 circCoord = 2.0 * gl_PointCoord - 1.0;

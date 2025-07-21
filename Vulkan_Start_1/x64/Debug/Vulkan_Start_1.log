@@ -1,9 +1,9 @@
 ﻿  Particles.cpp
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(267,45): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1863,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1864,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1868,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1869,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1870,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1871,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(271,33): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1876,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1877,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1881,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1882,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1883,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles.cpp(1884,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Vulkan_Start_1.vcxproj -> C:\Users\ashan\source\repos\Vulkan_Start_1\x64\Debug\Vulkan_Start_1.exe

@@ -23,7 +23,7 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-const uint32_t PARTICLE_COUNT = 8192 * 32;
+const uint32_t PARTICLE_COUNT = 8192 * 4;
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -78,6 +78,12 @@ struct UniformBufferObject {
 	alignas(16) glm::mat4 view;
 	alignas(16) glm::mat4 proj;
 	float deltaTime;
+
+	//optional parameters for boid simulation
+	float perceptionRadius;
+	float separationWeight;
+	float alignmentWeight;
+	float cohesionWeight;
 };
 
 struct Particle {
@@ -260,12 +266,12 @@ private:
 			if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 				cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 
-			drawFrame();
-
 			// We want to animate the particle system using the last frames time to get smooth, frame-rate independent animation
 			double currentTime = glfwGetTime();
-			lastFrameTime = (currentTime - lastTime) * 1000.0;
+			lastFrameTime = (currentTime - lastTime); // * 1000.0;
 			lastTime = currentTime;
+
+			drawFrame();
 		}
 
 		vkDeviceWaitIdle(device);
@@ -825,7 +831,8 @@ private:
 	}
 
 	void createComputePipeline() {
-		auto computeShaderCode = readFile("shaders_compute/comp.spv");
+		auto computeShaderCode = readFile("shaders_compute/comp.spv"); //normal particle simulation
+		//auto computeShaderCode = readFile("shaders_compute/comp_boid.spv"); //boid simulation
 
 		VkShaderModule computeShaderModule = createShaderModule(computeShaderCode);
 
@@ -1100,37 +1107,37 @@ private:
 				1.0f
 			);
 
-			//// Random position in 3D space
-			//particle.position = glm::vec4(
-			//	posDist(rndEngine),
-			//	posDist(rndEngine),
-			//	posDist(rndEngine),
-			//	1.0f
-			//);
+			// Random position in 3D space
+			particle.position = glm::vec4(
+				posDist(rndEngine),
+				posDist(rndEngine),
+				posDist(rndEngine),
+				1.0f
+			);
 
 			// Random velocity direction
-			particle.velocity = glm::normalize(glm::vec4(
-				rndDist(rndEngine) - 0.5f,
-				rndDist(rndEngine) - 0.5f,
-				rndDist(rndEngine) - 0.5f,
-				1.0f
-			)) * 0.00025f;
+			//particle.velocity = glm::normalize(glm::vec4(
+			//	rndDist(rndEngine) - 0.5f,
+			//	rndDist(rndEngine) - 0.5f,
+			//	rndDist(rndEngine) - 0.5f,
+			//	0.0f
+			//)) * 0.00025f;
 
-			//// Random velocity in all 3 dimensions
-			//particle.velocity = glm::vec4(
-			//	velDist(rndEngine),
-			//	velDist(rndEngine),
-			//	velDist(rndEngine),
-			//	1.0f
-			//);
+			//Random velocity in all 3 dimensions
+			particle.velocity = glm::vec4(
+				velDist(rndEngine),
+				velDist(rndEngine),
+				velDist(rndEngine),
+				0.0f
+			) * 1000.0f;
 
-			//// debug velocities
-			//particle.velocity = glm::vec4(
-			//	0.001f,
-			//	0.001f,
-			//	0.001f,
-			//	0.0000f
-			//);
+			// debug velocities
+	/*		particle.velocity = glm::vec4(
+				0.000f,
+				0.000f,
+				0.000f,
+				0.0000f
+			);*/
 
 			//// Make sure some particles have stronger Z movement
 			//if (rand() % 5 == 0) {  // 20% of particles
@@ -1547,7 +1554,7 @@ private:
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
 		UniformBufferObject ubo{};
-		ubo.deltaTime = lastFrameTime * 2.0f;
+		ubo.deltaTime = lastFrameTime;
 
 		// Identity matrix for model (no transformation)
 		ubo.model = glm::mat4(1.0f);
@@ -1560,6 +1567,12 @@ private:
 		//	glm::vec3(0.0f, 0.0f, 0.0f),  // Look at center
 		//	glm::vec3(0.0f, 1.0f, 0.0f)   // Up vector
 		//);
+
+		//For boid sim
+		ubo.perceptionRadius = 0.5f / 4;
+		ubo.separationWeight = 0.5f / 32;
+		ubo.alignmentWeight = 1.0f;
+		ubo.cohesionWeight = 0.15f * 16;
 
 		// Use camera controls for view matrix
 		ubo.view = glm::lookAt(
