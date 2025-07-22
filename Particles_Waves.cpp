@@ -85,7 +85,7 @@ struct UniformBufferObject {
 	alignas(16) glm::vec4 wavelengths;     // x,y,z wavelengths
 	alignas(16) glm::vec4 speeds;          // x,y,z speeds
 	float time;                            // time for animation
-	alignas(16) float padding[3]; // 16 bytes of padding (4 floats)
+	//alignas(16) float padding[3]; // 16 bytes of padding (4 floats)
 };
 
 struct Particle {
@@ -1041,130 +1041,47 @@ private:
 
 		throw std::runtime_error("failed to find supported format!");
 	}
-
 	void createShaderStorageBuffers() {
-
-		//// Initialize particles
-		//std::default_random_engine rndEngine((unsigned)time(nullptr));
-		//std::uniform_real_distribution<float> rndDist(-1.0f, 1.0f);
-		//std::uniform_real_distribution<float> rndSpeed(0.0001f, 0.0005f);
-
-		//// Initial particle positions on a sphere
-		//std::vector<Particle> particles(PARTICLE_COUNT);
-		//for (auto& particle : particles)
-		//{
-		//	// Create particles in a sphere
-		//	float theta = rndDist(rndEngine) * 2.0f * 3.14159265358979323846f;
-		//	float phi = acos(1.0f - 2.0f * rndDist(rndEngine));
-		//	float r = 0.25f * pow(rndDist(rndEngine), 1.0f / 3.0f);
-
-		//	//particle.position = glm::vec3(
-		//	//	r * sin(phi) * cos(theta),
-		//	//	r * sin(phi) * sin(theta),
-		//	//	r * cos(phi)
-		//	//);
-
-		//	// More uniform distribution in 3D space
-		//	particle.position = glm::vec3(
-		//		rndDist(rndEngine) * 0.5f,  // -0.5 to 0.5
-		//		rndDist(rndEngine) * 0.5f,
-		//		rndDist(rndEngine) * 0.5f
-		//	);
-
-		//	//// Random velocity direction
-		//	//particle.velocity = glm::normalize(glm::vec3(
-		//	//	rndDist(rndEngine) - 0.5f,
-		//	//	rndDist(rndEngine) - 0.5f,
-		//	//	rndDist(rndEngine) - 0.5f
-		//	//)) * 0.00025f;
-
-		//	// Random direction with more variation
-		//	particle.velocity = glm::vec3(
-		//		rndDist(rndEngine),
-		//		rndDist(rndEngine),
-		//		rndDist(rndEngine)
-		//	) * rndSpeed(rndEngine);
-
-		//	particle.color = glm::vec4(rndDist(rndEngine), rndDist(rndEngine), rndDist(rndEngine), 1.0f);
-		//}
-
-		std::default_random_engine rndEngine((unsigned)time(nullptr));
-		std::uniform_real_distribution<float> posDist(-0.8f, 0.8f);
-		std::uniform_real_distribution<float> velDist(-0.001f, 0.001f);
-		std::uniform_real_distribution<float> colDist(0.1f, 1.0f);
-		std::uniform_real_distribution<float> rndDist(-1.0f, 1.0f);
-
 		std::vector<Particle> particles(PARTICLE_COUNT);
-		for (auto& particle : particles) {
 
-			// Create particles in a sphere
-			float theta = rndDist(rndEngine) * 2.0f * 3.14159265358979323846f;
-			float phi = acos(1.0f - 2.0f * rndDist(rndEngine));
-			float r = 0.25f * pow(rndDist(rndEngine), 1.0f / 3.0f);
+		// Lattice (grid) configuration
+		int particlesPerAxis = static_cast<int>(std::cbrt(PARTICLE_COUNT));
+		if (particlesPerAxis * particlesPerAxis * particlesPerAxis < PARTICLE_COUNT) {
+			particlesPerAxis += 1; // Ensure enough grid cells
+		}
+		float spacing = 0.05f;  // Distance between particles
+		float halfExtent = spacing * (particlesPerAxis - 1) / 2.0f;
 
-			particle.position = glm::vec4(
-				r * sin(phi) * cos(theta),
-				r * sin(phi) * sin(theta),
-				r * cos(phi),
-				1.0f
-			);
+		int count = 0;
+		for (int x = 0; x < particlesPerAxis && count < PARTICLE_COUNT; x++) {
+			for (int y = 0; y < particlesPerAxis && count < PARTICLE_COUNT; y++) {
+				for (int z = 0; z < particlesPerAxis && count < PARTICLE_COUNT; z++) {
 
-			//// Random position in 3D space
-			//particle.position = glm::vec4(
-			//	posDist(rndEngine),
-			//	posDist(rndEngine),
-			//	posDist(rndEngine),
-			//	1.0f
-			//);
+					Particle& p = particles[count++];
 
-			// Random velocity direction
-			//particle.velocity = glm::normalize(glm::vec4(
-			//	rndDist(rndEngine) - 0.5f,
-			//	rndDist(rndEngine) - 0.5f,
-			//	rndDist(rndEngine) - 0.5f,
-			//	0.0f
-			//)) * 0.00025f;
+					// Centered 3D lattice
+					p.position = glm::vec4(
+						x * spacing - halfExtent,
+						y * spacing - halfExtent,
+						z * spacing - halfExtent,
+						1.0f
+					);
 
-			//Random velocity in all 3 dimensions
-			particle.velocity = glm::vec4(
-				velDist(rndEngine),
-				velDist(rndEngine),
-				velDist(rndEngine),
-				0.0f
-			) * 1000.0f;
-
-			// debug velocities
-	/*		particle.velocity = glm::vec4(
-				0.000f,
-				0.000f,
-				0.000f,
-				0.0000f
-			);*/
-
-			//// Make sure some particles have stronger Z movement
-			//if (rand() % 5 == 0) {  // 20% of particles
-			//	particle.velocity.z *= 3.0f;
-			//}
-
-			particle.color = glm::vec4(
-				colDist(rndEngine),
-				colDist(rndEngine),
-				colDist(rndEngine),
-				1.0f
-			);
-
-
-			//particle.color = glm::vec4(
-			//	1,
-			//	1,
-			//	1,
-			//	1
-			//);
+					p.velocity = glm::vec4(0.0f);  // No initial motion
+					p.velocity.y = p.position.y;
+					p.color = glm::vec4(
+						float(x) / (particlesPerAxis - 1),
+						float(y) / (particlesPerAxis - 1),
+						float(z) / (particlesPerAxis - 1),
+						1.0f
+					);
+				}
+			}
 		}
 
 		VkDeviceSize bufferSize = sizeof(Particle) * PARTICLE_COUNT;
 
-		// Create a staging buffer used to upload data to the gpu
+		// Create a staging buffer used to upload data to the GPU
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
 		createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
@@ -1185,8 +1102,8 @@ private:
 
 		vkDestroyBuffer(device, stagingBuffer, nullptr);
 		vkFreeMemory(device, stagingBufferMemory, nullptr);
-
 	}
+
 
 	void createUniformBuffers() {
 		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
@@ -1581,20 +1498,20 @@ private:
 		);
 		ubo.proj[1][1] *= -1;
 
-		ubo.amplitudes = glm::vec4(0.1f, 0.07f, 0.05f, 0.03f);
-		ubo.directions[0] = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+		ubo.amplitudes = glm::vec4(0.1f, 0.10f, 0.00f, 0.00f);
+		ubo.directions[0] = glm::vec4(0.0f, 0.10f, 0.0f, 0.0f);
 		ubo.directions[1] = glm::vec4(0.5f, 0.5f, 0.0f, 0.0f);
 		ubo.directions[2] = glm::vec4(-0.5f, 0.5f, 0.0f, 1.0f);
-		ubo.wavelengths = glm::vec4(5.0f, 8.0f, 12.0f, 20.0f);
-		ubo.speeds = glm::vec4(2.0f, 1.5f, 1.0f, 0.5f);
+		ubo.wavelengths = glm::vec4(0.5f, 0.5f, 0.5f, 0.50f);
+		ubo.speeds = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 		////DEBUG
-		//ubo.amplitudes = glm::vec4(1.0000f, 0.0000f, 0.0000f, 0.0000f);
-		//ubo.directions[0] = glm::vec4(1.000f, 1.000f, 1.000f, 0.000f);
-		//ubo.directions[1] = glm::vec4(0.0000f, 1.0000f, 1.0000f, 0.0000f);
-		//ubo.directions[2] = glm::vec4(0.0000f, 1.0000f, 1.0000f, 0.0000f);
-		//ubo.wavelengths = glm::vec4(0.000001f);
-		//ubo.speeds = glm::vec4(0.0000f, 1.0f, 0.000f, 0.0000f);
+		//ubo.amplitudes = glm::vec4(0.01f, 0.01f, 0.01f, 0.01f);
+		//ubo.directions[0] = glm::vec4(0.001f, 0.01f, 0.01f, 0.01f);
+		//ubo.directions[1] = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		//ubo.directions[2] = glm::vec4(-0.0f, 0.0f, 0.0f, 0.0f);
+		//ubo.wavelengths = glm::vec4(0.01f, 0.01f, 0.01f, 0.01f);
+		//ubo.speeds = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
 		memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 	}
