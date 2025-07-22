@@ -34,16 +34,20 @@ void main() {
     uint index = gl_GlobalInvocationID.x;
     Particle particle = particlesIn[index];
 
-    float originalY = particle.velocity.y;  // Retrieve stored Y
-    float amplitude = 0.01;
-    float frequency = 1.0;
-    float phaseOffset = originalY * 90.0;
+    // Extract wave parameters from UBO
+    vec2 direction = normalize(ubo.directions[0].xy);  // 2D horizontal direction
+    float wavelength = ubo.wavelengths.x;
+    float amplitude = ubo.amplitudes.x;
+    float speed = ubo.speeds.x;
 
-    // Wave as a function of fixed Y and time
-    float wave = amplitude * sin(2.0 * PI * frequency * ubo.time + phaseOffset);
+    float frequency = 2.0 * PI / wavelength;
+    float phase = dot(direction, particle.position.xz);  // horizontal phase based on XZ
+    float wave = amplitude * sin(frequency * phase + speed * ubo.time);
 
-    // Oscillate around fixed Y
-    particle.position.y = originalY + wave;
+    // Use original Y as base height
+    float baseY = particle.velocity.y;
+    particle.position.y = baseY + wave;
 
     particlesOut[index] = particle;
 }
+

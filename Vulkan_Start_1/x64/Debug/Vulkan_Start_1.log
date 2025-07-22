@@ -6,4 +6,5 @@ C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1805,17): warning
 C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1806,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
 C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1807,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1808,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Vulkan_Start_1.vcxproj -> C:\Users\ashan\source\repos\Vulkan_Start_1\x64\Debug\Vulkan_Start_1.exe

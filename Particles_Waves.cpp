@@ -1498,7 +1498,7 @@ private:
 		);
 		ubo.proj[1][1] *= -1;
 
-		ubo.amplitudes = glm::vec4(0.1f, 0.10f, 0.00f, 0.00f);
+		ubo.amplitudes = glm::vec4(0.01f, 0.10f, 0.00f, 0.00f);
 		ubo.directions[0] = glm::vec4(0.0f, 0.10f, 0.0f, 0.0f);
 		ubo.directions[1] = glm::vec4(0.5f, 0.5f, 0.0f, 0.0f);
 		ubo.directions[2] = glm::vec4(-0.5f, 0.5f, 0.0f, 1.0f);
