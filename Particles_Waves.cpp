@@ -1069,12 +1069,25 @@ private:
 
 					p.velocity = glm::vec4(0.0f);  // No initial motion
 					p.velocity.y = p.position.y;
-					p.color = glm::vec4(
-						float(x) / (particlesPerAxis - 1),
-						float(y) / (particlesPerAxis - 1),
-						float(z) / (particlesPerAxis - 1),
-						1.0f
-					);
+					
+					//Blue
+					float t = float(y) / (particlesPerAxis - 1);  // 0 at bottom, 1 at top
+
+					// Interpolate from dark blue to light blue:
+					glm::vec3 darkBlue(0.0f, 0.0f, 0.2f);
+					glm::vec3 lightBlue(0.3f, 0.3f, 0.5f);
+
+					glm::vec3 color = glm::mix(darkBlue, lightBlue, t);
+
+					p.color = glm::vec4(color, 1.0f);
+
+					////Rainbow
+					//p.color = glm::vec4(
+					//	float(x) / (particlesPerAxis - 1),
+					//	float(y) / (particlesPerAxis - 1),
+					//	float(z) / (particlesPerAxis - 1),
+					//	1.0f
+					//);
 				}
 			}
 		}
@@ -1498,7 +1511,7 @@ private:
 		);
 		ubo.proj[1][1] *= -1;
 
-		ubo.amplitudes = glm::vec4(0.01f, 0.10f, 0.00f, 0.00f);
+		ubo.amplitudes = glm::vec4(0.02f, 0.10f, 0.00f, 0.00f);
 		ubo.directions[0] = glm::vec4(0.0f, 0.10f, 0.0f, 0.0f);
 		ubo.directions[1] = glm::vec4(0.5f, 0.5f, 0.0f, 0.0f);
 		ubo.directions[2] = glm::vec4(-0.5f, 0.5f, 0.0f, 1.0f);
