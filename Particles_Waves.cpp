@@ -23,7 +23,7 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-const uint32_t PARTICLE_COUNT = 8192;
+const uint32_t PARTICLE_COUNT = 1000000 * 2;
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -80,10 +80,10 @@ struct UniformBufferObject {
 	float deltaTime;
 
 	// Gerstner wave parameters (example for 3 waves)
-	alignas(16) glm::vec4 amplitudes;      // x,y,z unused, w = count or padding
-	alignas(16) glm::vec4 directions[3];   // 3 directions, w unused
-	alignas(16) glm::vec4 wavelengths;     // x,y,z wavelengths
-	alignas(16) glm::vec4 speeds;          // x,y,z speeds
+	alignas(16) glm::vec4 amplitudes;
+	alignas(16) glm::vec4 directions[4];
+	alignas(16) glm::vec4 wavelengths;
+	alignas(16) glm::vec4 speeds;
 	float time;                            // time for animation
 	//alignas(16) float padding[3]; // 16 bytes of padding (4 floats)
 };
@@ -1049,7 +1049,7 @@ private:
 		if (particlesPerAxis * particlesPerAxis * particlesPerAxis < PARTICLE_COUNT) {
 			particlesPerAxis += 1; // Ensure enough grid cells
 		}
-		float spacing = 0.05f;  // Distance between particles
+		float spacing = 0.01f;  // Distance between particles
 		float halfExtent = spacing * (particlesPerAxis - 1) / 2.0f;
 
 		int count = 0;
@@ -1069,25 +1069,25 @@ private:
 
 					p.velocity = glm::vec4(0.0f);  // No initial motion
 					p.velocity.y = p.position.y;
-					
-					//Blue
-					float t = float(y) / (particlesPerAxis - 1);  // 0 at bottom, 1 at top
 
-					// Interpolate from dark blue to light blue:
-					glm::vec3 darkBlue(0.0f, 0.0f, 0.2f);
-					glm::vec3 lightBlue(0.3f, 0.3f, 0.5f);
+					////Blue
+					//float t = float(y) / (particlesPerAxis - 1);  // 0 at bottom, 1 at top
 
-					glm::vec3 color = glm::mix(darkBlue, lightBlue, t);
+					//// Interpolate from dark blue to light blue:
+					//glm::vec3 darkBlue(0.0f, 0.0f, 0.2f);
+					//glm::vec3 lightBlue(0.3f, 0.3f, 0.5f);
 
-					p.color = glm::vec4(color, 1.0f);
+					//glm::vec3 color = glm::mix(darkBlue, lightBlue, t);
 
-					////Rainbow
-					//p.color = glm::vec4(
-					//	float(x) / (particlesPerAxis - 1),
-					//	float(y) / (particlesPerAxis - 1),
-					//	float(z) / (particlesPerAxis - 1),
-					//	1.0f
-					//);
+					//p.color = glm::vec4(color, 1.0f);
+
+					//Rainbow
+					p.color = glm::vec4(
+						float(x) / (particlesPerAxis - 1),
+						float(y) / (particlesPerAxis - 1),
+						float(z) / (particlesPerAxis - 1),
+						1.0f
+					);
 				}
 			}
 		}
@@ -1511,12 +1511,15 @@ private:
 		);
 		ubo.proj[1][1] *= -1;
 
-		ubo.amplitudes = glm::vec4(0.02f, 0.10f, 0.00f, 0.00f);
-		ubo.directions[0] = glm::vec4(0.0f, 0.10f, 0.0f, 0.0f);
-		ubo.directions[1] = glm::vec4(0.5f, 0.5f, 0.0f, 0.0f);
-		ubo.directions[2] = glm::vec4(-0.5f, 0.5f, 0.0f, 1.0f);
-		ubo.wavelengths = glm::vec4(0.5f, 0.5f, 0.5f, 0.50f);
-		ubo.speeds = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		ubo.amplitudes = glm::vec4(0.02f, 0.10f, 0.05f, 0.03f);
+
+		ubo.directions[0] = glm::vec4(0.0f, 0.10f, 0.0f, 0.0f);  // Wave 1
+		ubo.directions[1] = glm::vec4(0.5f, 0.5f, 0.0f, 0.0f);   // Wave 2
+		ubo.directions[2] = glm::vec4(-0.5f, 0.5f, 0.0f, 0.0f);  // Wave 3
+		ubo.directions[3] = glm::vec4(0.3f, -0.8f, 0.0f, 0.0f);  // Wave 4
+
+		ubo.wavelengths = glm::vec4(0.55f, 0.35f, 0.65f, 0.45);
+		ubo.speeds = glm::vec4(1.0f, 1.2f, 0.7f, 0.2f);
 
 		////DEBUG
 		//ubo.amplitudes = glm::vec4(0.01f, 0.01f, 0.01f, 0.01f);
@@ -1850,9 +1853,9 @@ private:
 			if (key == GLFW_KEY_D)
 				cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
 			if (key == GLFW_KEY_SPACE)
-				cameraPos += velocity * cameraUp;
+				cameraPos += velocity * 10 * cameraUp;
 			if (key == GLFW_KEY_LEFT_SHIFT)
-				cameraPos -= velocity * cameraUp;
+				cameraPos -= velocity * 10 * cameraUp;
 			if (key == GLFW_KEY_ESCAPE)
 				glfwSetWindowShouldClose(window, true);
 		}

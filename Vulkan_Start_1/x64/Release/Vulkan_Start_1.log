@@ -1,14 +1,14 @@
-﻿  Particles_Boid.cpp
-  Particles_Waves.cpp
+﻿  Particles_Waves.cpp
 C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(273,33): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1813,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1814,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1818,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1819,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1820,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1821,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1816,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1817,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1821,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1822,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1823,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1824,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Generating code
-  Compiler switch has changed, fall back to full compilation.
-  All 1544 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  12 of 1542 functions ( 0.8%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    2 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Vulkan_Start_1.vcxproj -> C:\Users\ashan\source\repos\Vulkan_Start_1\x64\Release\Vulkan_Start_1.exe
