@@ -1,0 +1,53 @@
+#version 450
+#define PI 3.1415926538
+
+layout(std140, binding = 0) uniform UniformBufferObject {
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+    float deltaTime;
+
+    vec4 amplitudes;         // x -> wave amplitude
+    vec4 directions[3];      // direction vectors (only directions[0] used)
+    vec4 wavelengths;        // x -> wavelength
+    vec4 speeds;             // x -> wave speed
+    float time;
+} ubo;
+
+struct Particle {
+    vec4 position;
+    vec4 velocity;  // velocity.y holds the original Y-position
+    vec4 color;
+};
+
+layout(std140, binding = 1) readonly buffer ParticleSSBOIn {
+    Particle particlesIn[];
+};
+
+layout(std140, binding = 2) buffer ParticleSSBOOut {
+    Particle particlesOut[];
+};
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    Particle particle = particlesIn[index];
+
+    // Extract wave parameters from UBO
+    vec2 direction = normalize(ubo.directions[0].xy);  // 2D horizontal direction
+    float wavelength = ubo.wavelengths.x;
+    float amplitude = ubo.amplitudes.x;
+    float speed = ubo.speeds.x;
+
+    float frequency = 2.0 * PI / wavelength;
+    float phase = dot(direction, particle.position.xz);  // horizontal phase based on XZ
+    float wave = amplitude * sin(frequency * phase + speed * ubo.time);
+
+    // Use original Y as base height
+    float baseY = particle.velocity.y;
+    particle.position.y = baseY + wave;
+
+    particlesOut[index] = particle;
+}
+
