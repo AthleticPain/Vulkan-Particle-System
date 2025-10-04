@@ -1,4 +1,6 @@
-﻿  Particles_Waves.cpp
+﻿  Particles.cpp
+  Particles_Boid.cpp
+  Particles_Waves.cpp
 C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(273,33): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1816,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1817,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
@@ -6,4 +8,8 @@ C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1821,17): warning
 C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1822,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
 C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1823,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\ashan\source\repos\Vulkan_Start_1\Particles_Waves.cpp(1824,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  Triangle.cpp
+  Generating Code...
+  LINK : C:\Users\ashan\source\repos\Vulkan_Start_1\x64\Debug\Vulkan_Start_1.exe not found or not built by the last incremental link; performing full link
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Vulkan_Start_1.vcxproj -> C:\Users\ashan\source\repos\Vulkan_Start_1\x64\Debug\Vulkan_Start_1.exe

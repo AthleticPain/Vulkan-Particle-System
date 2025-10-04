@@ -1901,9 +1901,9 @@
 //			if (key == GLFW_KEY_D)
 //				cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * velocity;
 //			if (key == GLFW_KEY_SPACE)
-//				cameraPos += velocity * cameraUp;
+//				cameraPos += velocity * 10 * cameraUp;
 //			if (key == GLFW_KEY_LEFT_SHIFT)
-//				cameraPos -= velocity * cameraUp;
+//				cameraPos -= velocity * 10 * cameraUp;
 //			if (key == GLFW_KEY_ESCAPE)
 //				glfwSetWindowShouldClose(window, true);
 //		}

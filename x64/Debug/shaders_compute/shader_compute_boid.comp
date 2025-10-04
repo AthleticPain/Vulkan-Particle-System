@@ -1,0 +1,98 @@
+#version 450
+
+layout(std140, binding = 0) uniform UniformBufferObject {
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+    float deltaTime;
+    float perceptionRadius;
+    float separationWeight;
+    float alignmentWeight;
+    float cohesionWeight;
+} ubo;
+
+struct Boid {
+    vec4 position;
+    vec4 velocity;
+    vec4 color;
+};
+
+layout(std140, binding = 1) readonly buffer BoidSSBOIn {
+    Boid boidsIn[];
+};
+
+layout(std140, binding = 2) writeonly buffer BoidSSBOOut {
+    Boid boidsOut[];
+};
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+void main() {
+    uint i = gl_GlobalInvocationID.x;
+    if (i >= boidsIn.length()) return;
+
+    Boid self = boidsIn[i];
+    vec3 pos = self.position.xyz;
+    vec3 vel = self.velocity.xyz;
+
+    vec3 separation = vec3(0);
+    vec3 alignmentSum = vec3(0);
+    vec3 cohesion = vec3(0);
+    int neighborCount = 0;
+
+    for (uint j = 0; j < boidsIn.length(); ++j) {
+        if (j == i) continue;
+
+        vec3 otherPos = boidsIn[j].position.xyz;
+        vec3 toOther = otherPos - pos;
+        float dist = length(toOther);
+
+        if (dist < ubo.perceptionRadius && dist > 0.0001) {
+            separation -= normalize(toOther) / dist; // inverse-weighted
+            alignmentSum += boidsIn[j].velocity.xyz;
+            cohesion += otherPos;
+            neighborCount++;
+        }
+    }
+
+    if (neighborCount > 0) {
+        // Separation
+        vec3 separationForce = ubo.separationWeight * separation;
+
+        // Alignment - use normalized average heading
+        vec3 avgHeading = normalize(alignmentSum / float(neighborCount) + 1e-5);
+        vec3 alignmentForce = ubo.alignmentWeight * avgHeading;
+
+        // Cohesion - steer toward center of mass
+        vec3 centerOfMass = cohesion / float(neighborCount);
+        vec3 cohesionForce = ubo.cohesionWeight * normalize(centerOfMass - pos);
+
+        // Combine forces
+        vel += separationForce;
+        vel += alignmentForce;
+        vel += cohesionForce;
+    }
+
+    // Limit speed
+    float speedLimit = 2.0;
+    float speed = length(vel);
+    if (speed > speedLimit) {
+        vel = normalize(vel) * speedLimit;
+    }
+
+    // Update position
+    pos += vel * ubo.deltaTime;
+
+    // Wrap around bounds
+    float boundary = 2;
+
+    for (int axis = 0; axis < 3; ++axis) {
+        if (pos[axis] > boundary) pos[axis] = -boundary;
+        if (pos[axis] < -boundary) pos[axis] = boundary;
+    }
+
+    // Write result
+    boidsOut[i].position = vec4(pos, 1.0);
+    boidsOut[i].velocity = vec4(vel, 0.0);
+    boidsOut[i].color = self.color;
+}
